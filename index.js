@@ -23,7 +23,7 @@ function createApp() {
       background: '#000',
       skyBox: 'MilkyWay'
     })
-  
+
     app.postEffect = getPostEffect()
     resolve()
   })
@@ -44,7 +44,7 @@ function createMap() {
       },
       attribution: '高德'
     })
-  
+
     const tileLayer = app.create({
       type: 'TileLayer',
       name: 'tileLayer',
@@ -53,9 +53,9 @@ function createMap() {
         template: CMAP.TileLayerStyle.DARKBLUE
       }
     })
-  
+
     map.addLayer(tileLayer)
-  
+
     app.camera.earthFlyTo({
       lonlat: [106.569739, 29.574505],
       height: 2000,
@@ -74,8 +74,8 @@ function createMap() {
  */
 function createRoad() {
   const roadData = getGeojson()
-  roadData.features = roadData.features.filter(item => item.geometry.type === 'LineString')
-  
+  roadData.features = roadData.features.filter((item) => item.geometry.type === 'LineString')
+
   const roadLayer = app.create({
     type: 'FeatureLayer',
     name: 'roadLayer',
@@ -101,11 +101,11 @@ function createRoad() {
  */
 function createBuilding() {
   const buildingData = getGeojson()
-  buildingData.features = buildingData.features.filter(item => item.geometry.type === 'Polygon')
-  
+  buildingData.features = buildingData.features.filter((item) => item.geometry.type === 'Polygon')
+
   window.buildingLayer = app.create({
-		type: 'ThingLayer',
-		name: 'buildingLayer'
+    type: 'ThingLayer',
+    name: 'buildingLayer'
   })
   map.addLayer(buildingLayer)
 
@@ -115,7 +115,7 @@ function createBuilding() {
       'https://static.3dmomoda.com/textures/21020517lkxetbzbcgilhjoggt1cooxs.jpg',
       'https://static.3dmomoda.com/textures/21020517zxvr9jgmjbsyyaaigijgl8ho.jpg',
       'https://static.3dmomoda.com/textures/21020517tkqtgfbgb9w73gskc9cackdj.jpg',
-      'https://static.3dmomoda.com/textures/210205173zwypn5b1rxo2fhey7pyxzn8.jpg',
+      'https://static.3dmomoda.com/textures/210205173zwypn5b1rxo2fhey7pyxzn8.jpg'
     ]
     const isLowBuild = item.properties.height < 160
     const texture = randomTextures[Math.floor(Math.random() * randomTextures.length)]
@@ -129,17 +129,14 @@ function createBuilding() {
         type: isLowBuild ? 'vector' : 'image',
         color: '#0D2162',
         opacity: 0.7,
-        imageUrl: [
-          'https://static.3dmomoda.com/textures/21020517dbkngsgv1wugn3ldfrje3izv.png',
-          texture
-        ],
+        imageUrl: ['https://static.3dmomoda.com/textures/21020517dbkngsgv1wugn3ldfrje3izv.png', texture],
         blending: false,
         effect: true,
         textureWrap: CMAP.TextureWrapMode.Stretch
       }
     })
     buildingLayer.add(building)
-  })  
+  })
 }
 
 /**
@@ -147,9 +144,9 @@ function createBuilding() {
  */
 function createCampus() {
   const sceneLonlat = [106.571739, 29.575505]
-	const position = CMAP.Util.convertLonlatToWorld(sceneLonlat, 0.5)
-	const angles = CMAP.Util.getAnglesFromLonlat(sceneLonlat, 180)
-  
+  const position = CMAP.Util.convertLonlatToWorld(sceneLonlat, 0.5)
+  const angles = CMAP.Util.getAnglesFromLonlat(sceneLonlat, 180)
+
   window.campus = app.create({
     type: 'Campus',
     name: '江北城',
@@ -186,7 +183,6 @@ function updateCampusEffect() {
   const colors = ['#0D2162', '#3854AD', '#3A84FE']
   things.forEach((item, index) => {
     if (item.type === 'Thing') {
-
     } else {
       item.style.color = colors[index % colors.length]
       item.style.opacity = 0.8
@@ -220,11 +216,7 @@ function createChart() {
  */
 async function init() {
   try {
-    await _import([
-      LIB_UEARTH, 
-      DATA_GEOJSON,
-      CONFIG_EFFECT
-    ])
+    await _import([LIB_UEARTH, DATA_GEOJSON, CONFIG_EFFECT])
 
     await createApp()
     await createMap()
