@@ -53,7 +53,8 @@ function _import(libs) {
 function createApp() {
   return new Promise((resolve) => {
     window.app = new THING.App({
-      background: '#000'
+      background: '#000',
+      skyBox: 'MilkyWay'
     })
     // app.postEffect = effectConfig
     app.lighting = globalConfig
@@ -92,9 +93,8 @@ function createMap() {
     })
 
     map.addLayer(tileLayer)
-
     app.camera.earthFlyTo({
-      lonlat: [107.396164,29.704977],
+      lonlat: [107.396164, 29.704977],
       height: 2000,
       time: 0,
       disablePick: false,
@@ -115,7 +115,7 @@ function createBuilding() {
       type: 'GET',
       url: GEO_BUILDING
     })
-    const buildingLayer = app.create({
+    window.buildingLayer = app.create({
       type: 'ThingLayer',
       name: 'buildingLayer'
     })
@@ -158,9 +158,51 @@ function createBuilding() {
 }
 
 /**
+ * 创建建筑流光
+ */
+function createBuildingFlow() {
+  return new Promise(async(resolve) => {
+    const building = await request({
+      type: 'GET',
+      url: GEO_BUILDING
+    })
+    building.features.forEach((item, index) => {
+      if (index < 900 || index > 1200) return
+      if (item.geometry && item.geometry.coordinates) {
+        const len = Math.floor(item.properties.Height*3 / 30)
+        for(let i = 0; i < len; i++) {
+          const heightArray = new Array(item.geometry.coordinates[0].length).fill(i*30)
+          const flowLine = app.create({
+            type: 'GeoLine',
+            name: 'flowLine' + index + '_' + i,
+            coordinates: item.geometry.coordinates[0],
+            heightArray,
+            renderer: {
+              type: 'vector',
+              lineType: 'Plane',
+              // imageUrl: '/guide/image/uGeo/path.png', // 贴图路径
+              effect: true,
+              speed: 0,
+              numPass: 5,
+              opacity: 0.8,
+              color: '#ff4200',
+              width: 8,
+              glowStrength: 3,
+              blending: true
+            }
+          })
+          buildingLayer.add(flowLine)
+        }
+      }
+    })
+    resolve()
+  })
+}
+
+/**
  * 创建街道道路
  */
-function createRoad() {
+function createRoadFlow() {
   return new Promise(async(resolve) => {
     const road = await request({
       type: 'GET',
@@ -234,6 +276,86 @@ function createWater() {
 }
 
 /**
+ * 创建3D飞线效果
+ */
+function createFlyLine() {
+  return new Promise((resolve) => {
+    window.flylineLayer = app.create({
+      type: 'ThingLayer',
+      name: 'flylineLayer'
+    })
+    map.addLayer(flylineLayer)
+    const features = [
+      { coordinates: [[107.393851,29.702475], [107.409559,29.694406]] },
+      { coordinates: [[107.393851,29.702475], [107.376085,29.714013]] },
+      { coordinates: [[107.393851,29.702475], [107.378231,29.688217]] },
+    ]
+    features.forEach((item, index) => {
+      const lineTextures = [
+        'https://www.thingjs.com/uploads/wechat/153565/file/3D%E5%B0%84%E7%BA%BF%E6%BC%94%E7%A4%BA/z1.png',
+        'https://www.thingjs.com/uploads/wechat/153565/file/3D%E5%B0%84%E7%BA%BF%E6%BC%94%E7%A4%BA/z_11.png',
+        'https://www.thingjs.com/uploads/wechat/153565/file/3D%E5%B0%84%E7%BA%BF%E6%BC%94%E7%A4%BA/z3.png'
+      ]
+      const flyline = app.create({
+        type: 'GeoFlyLine',
+        name: 'flyline' + index,
+        coordinates: item.coordinates,
+        offsetHeight: 200,
+        renderer: {
+          type: 'image',
+          lineType: 'Plane',
+          imageUrl: lineTextures[index],
+          effect: true,
+          speed: 1,
+          numPass: 3,
+          width: 20,
+          blending: true
+        }
+      })
+      const verticalLine = app.create({
+        type: 'GeoLine',
+        name: 'verticalLine' + index,
+        coordinates: [item.coordinates[1], item.coordinates[1]],
+        heightArray: [5, 580],
+        renderer: {
+          type: 'image',
+          lineType: 'Plane',
+          imageUrl: 'https://www.thingjs.com/uploads/wechat/153565/file/3D%E5%B0%84%E7%BA%BF%E6%BC%94%E7%A4%BA/h1.png', // 贴图路径
+          effect: true,
+          speed: 2,
+          numPass: 3,
+          width: 16,
+          glowStrength: 1.8,
+          blending: true
+        }
+      })
+      flylineLayer.add(flyline)
+      flylineLayer.add(verticalLine)
+    })
+
+
+    // const sceneLonlat = [107.393851,29.702475]
+    // const angles = CMAP.Util.getAnglesFromLonlat(sceneLonlat, 0)
+    // for(let i = 0; i < 5; i++) {
+    //   const position = CMAP.Util.convertLonlatToWorld(sceneLonlat, i*40)
+    //   const circle = app.create({
+    //     type: 'Thing',
+    //     name: '辉光' + i,
+    //     url: '/api/models/c0ddc3e7815e4711b4a74d19fd69428b/0/gltf/', 
+    //     // url: '/api/models/b0f37b2520a8446fa2ca9430bd532cd4/0/gltf/',
+    //     position,
+    //     angles,
+    //     scale: [10, 10, 10]
+    //   })
+    //   flylineLayer.add(circle)
+    // }
+
+    resolve()
+  })
+}
+
+
+/**
  * 初始化程序
  */
 async function init() {
@@ -244,8 +366,10 @@ async function init() {
     await createApp()
     await createMap()
     await createBuilding()
-    await createRoad()
+    await createBuildingFlow()
+    await createRoadFlow()
     await createWater()
+    await createFlyLine()
     hideLoading()
   } catch (e) {
     console.error('捕获异常：', e)
